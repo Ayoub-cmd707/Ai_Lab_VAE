@@ -74,19 +74,31 @@ class Encoder(nn.Module):
 
         ### Convolutional block
         self.encoder_cnn = nn.Sequential(
-
+            nn.Conv2d(1, 8, 3, 2, 1, 1),
+            nn.ReLU(),
+            nn.Conv2d(8, 16, 3, 2, 1, 1),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, 3, 2, 0, 0),
+            nn.ReLU(),
         )
-
         ### Flatten layer
-
+        self.flatten = nn.Flatten()
         ### Linear block
         self.encoder_lin = nn.Sequential(
-
+            nn.Linear(3*3*32, 128),
+            nn.ReLU(),
+            nn.Linear(128, config['latent_dim']),
         )
+
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """TODO: implement the forward method."""
-
+        #A LINEAR BLOCK
+        x = self.encoder_cnn(x)
+        #AN UNFLATTEN LAYER
+        x = self.flatten(x)
+        #DECONVOLUTIONAL BLOCK
+        x = self.encoder_lin(x)
         return x
 
 
@@ -103,19 +115,29 @@ class Decoder(nn.Module):
 
         # Convolutional block
         self.decoder_lin = nn.Sequential(
-
+            nn.Linear(3 * 3 * 32, 128),
+            nn.ReLU(),
+            nn.Linear(128, config['latent_dim']),
         )
 
         # Unflatten layer
+        self.unflatten = nn.Unflatten(dim=1,unflattened_size=(1, 2))
 
         # Deconvolutional block
         self.decoder_conv = nn.Sequential(
-
+            nn.ConvTranspose2d(1, 8, 3, 2, 1, 1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(8, 16, 3, 2, 1, 1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(16, 32, 3, 2, 0, 0),
+            nn.Sigmoid()
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """TODO: implement the forward method."""
-
+        x = self.decoder_lin(x)
+        x = self.unflatten(x)
+        x = self.decoder_conv(x)
         return x
 
 
