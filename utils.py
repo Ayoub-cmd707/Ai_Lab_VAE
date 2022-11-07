@@ -38,20 +38,27 @@ def train_autoencoder(model: VanillaAutoEncoder, options: dict, dataset: Dataset
         TODO: Implement the code below.
     """
     # TODO: define the loss function.
-    distance = None
+    distance = nn.MSELoss()
 
     for epoch in range(options["num_epochs"]):
         for data in dataset.train_loader:
             img, _ = data
             img = torch.Tensor(img).to(options["device"])
 
+            optimizer.zero_grad()
+
             # TODO: forward the image through the model.
+            output = model.forward(img)
 
             # TODO: calculate the loss
-            loss = None
+            loss = distance(output, img)
 
             # TODO: Backpropagate the loss through the model;
+            loss.backward()
+
             # TODO: use the optimizer in a correct way to update the weights.
+            optimizer.step()
+
 
         print('epoch [{}/{}], loss: {:.4f}'.format(epoch + 1, options["num_epochs"], loss.item()))
         recon = test_autoencoder(model, dataset, options)
@@ -72,20 +79,28 @@ def train_vae(model: VariationalAutoEncoder, options: dict, dataset: Dataset,
     TODO: Implement the code below.
     """
     # TODO: define the loss function.
-    distance = None
+    distance = nn.MSELoss()
 
     for epoch in range(options["num_epochs"]):
         for data in dataset.train_loader:
             img, _ = data
             img = torch.Tensor(img).to(options["device"])
 
+            optimizer.zero_grad()
+
             # TODO: forward the image through the model.
+            output = model.forward(img)
+
 
             # TODO: calculate the loss
-            loss = None
+            loss = calc_vae_loss(distance, output, img, options)
 
             # TODO: Backpropagate the loss through the model;
+            loss.backward()
+
             # TODO: use the optimizer in a correct way to update the weights.
+            optimizer.step()
+
 
         print('epoch [{}/{}], loss: {:.4f}'.format(epoch + 1, options["num_epochs"], loss.item()))
         recon = test_vae(model, dataset, options)
@@ -106,7 +121,8 @@ def reparameterize(mu: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
     onto a certain place in the latent space.
     TODO: Implement this below.
     """
-    pass
+
+    return mu + torch.exp(log_var / 2) * torch.distributions.Normal(0, 1).sample(mu.shape)
 
 
 def save(model: nn.Module, config: dict):
@@ -131,6 +147,7 @@ def test_autoencoder(model: [VanillaAutoEncoder, VariationalAutoEncoder], datase
     """
     examples = enumerate(dataset.test_loader)
     _, (example_data, example_targets) = next(examples)
+
 
     reconstruction = model.forward(example_data[:8].to(options["device"])).detach()
     comparison_images = torch.cat((dataset.denormalize(example_data[:8]), reconstruction), dim=0)

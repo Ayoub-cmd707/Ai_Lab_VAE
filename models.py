@@ -29,6 +29,9 @@ class VanillaAutoEncoder(nn.Module):
         self.decoder = Decoder(config)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.encoder(x)
+        x = self.decoder(x)
+
         return x
 
     def generate(self, latent_vector: torch.Tensor) -> torch.Tensor:
@@ -53,7 +56,9 @@ class VariationalAutoEncoder(nn.Module):
         """
         :rtype: tuple consisting of (decoded image, latent_vector, mu, log_var)
         """
-        pass
+        latent_vector, mu, log_var = self.encoder(x)
+        decoded_image = self.decoder(latent_vector)
+        return decoded_image, latent_vector, mu, log_var
 
     def generate(self, latent_vector: torch.Tensor) -> torch.Tensor:
         return self.decoder(latent_vector)
@@ -115,21 +120,21 @@ class Decoder(nn.Module):
 
         # Convolutional block
         self.decoder_lin = nn.Sequential(
-            nn.Linear(3 * 3 * 32, 128),
+            nn.Linear(config["latent_dim"], 128),
             nn.ReLU(),
-            nn.Linear(128, config['latent_dim']),
+            nn.Linear(128, 3 * 3 * 32),
         )
 
         # Unflatten layer
-        self.unflatten = nn.Unflatten(dim=1,unflattened_size=(1, 2))
+        self.unflatten = nn.Unflatten(1, (32, 3, 3))
 
         # Deconvolutional block
         self.decoder_conv = nn.Sequential(
-            nn.ConvTranspose2d(1, 8, 3, 2, 1, 1),
+            nn.ConvTranspose2d(32, 16, kernel_size=(3, 3), stride=(2, 2), padding=0, output_padding=0),
             nn.ReLU(),
-            nn.ConvTranspose2d(8, 16, 3, 2, 1, 1),
+            nn.ConvTranspose2d(16, 8, kernel_size=(3, 3), stride=(2, 2), padding=1, output_padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(16, 32, 3, 2, 0, 0),
+            nn.ConvTranspose2d(8, 1, kernel_size=(3, 3), stride=(2, 2), padding=1, output_padding=1),
             nn.Sigmoid()
         )
 
@@ -153,17 +158,25 @@ class VariationalEncoder(nn.Module):
 
         ### Convolutional block
         self.encoder_cnn = nn.Sequential(
-
+            nn.Conv2d(1, 8, kernel_size=(3, 3), stride=(2, 2), padding=1),
+            nn.ReLU(),
+            nn.Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=0),
+            nn.ReLU()
         )
 
         ### Flatten layer
+        self.flatten = nn.Flatten()
 
         ### Linear block
         self.encoder_lin = nn.Sequential(
-
+            nn.Linear(3 * 3 * 32, 3 * 3 * 32),
+            nn.ReLU()
         )
-        self.fc_mu = None
-        self.fc_log_var = None
+        self.fc_mu = nn.Linear(32*3*3, config['latent_dim'])
+        self.fc_log_var = nn.Linear(32*3*3, config['latent_dim'])
+
 
     def forward(self, x: torch.Tensor) -> tuple:
         """
@@ -172,6 +185,11 @@ class VariationalEncoder(nn.Module):
         :rtype: tuple consisting of (latent vector, mu, log_var)
         """
         from utils import reparameterize
-        mu = None
-        log_var = None
+
+        x = self.encoder_cnn(x)
+        x = self.flatten(x)
+        x = self.encoder_lin(x)
+
+        mu = self.fc_mu(x)
+        log_var = self.fc_log_var(x)
         return reparameterize(mu, log_var), mu, log_var
