@@ -79,12 +79,12 @@ class Encoder(nn.Module):
 
         ### Convolutional block
         self.encoder_cnn = nn.Sequential(
-            nn.Conv2d(1, 8, 3, 2, 1, 1),
+            nn.Conv2d(1, 8, kernel_size=(3, 3), stride=(2, 2), padding=1),
             nn.ReLU(),
-            nn.Conv2d(8, 16, 3, 2, 1, 1),
+            nn.Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=1),
             nn.ReLU(),
-            nn.Conv2d(16, 32, 3, 2, 0, 0),
-            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=0),
+            nn.ReLU()
         )
         ### Flatten layer
         self.flatten = nn.Flatten()

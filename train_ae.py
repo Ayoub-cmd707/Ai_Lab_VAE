@@ -1,6 +1,7 @@
 import random
 
 import models
+import utils
 from options import CustomParser
 from utils import *
 
@@ -17,7 +18,7 @@ if config["device"] == "cuda" and torch.cuda.is_available():
 else:
     config["device"] = torch.device("cpu")
 
-wandb.init(project="VAE_project", entity="arafa42", name=config["name"] + "_train")
+wandb.init(project="AE_project", entity="arafa42", name=config["name"] + "_train")
 
 # Let's first prepare the MNIST dataset,
 # run the test_dataset.py file to view some examples and see the dimensions of your tensor.
@@ -26,8 +27,8 @@ dataset = Dataset(config)
 # TODO: define and train the model. Use the function from utils.py
 print(config)
 model = models.VanillaAutoEncoder(config)
-#optimizer = torch.optim.Adam()
-#train_autoencoder(model,options,optimizer)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+utils.train_autoencoder(model, config, dataset, optimizer)
 
 # save the model
 save(model, config)
