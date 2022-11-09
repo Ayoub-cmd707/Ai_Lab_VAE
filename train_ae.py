@@ -27,7 +27,7 @@ dataset = Dataset(config)
 # TODO: define and train the model. Use the function from utils.py
 print(config)
 model = models.VanillaAutoEncoder(config)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0002, weight_decay=1e-8)
 utils.train_autoencoder(model, config, dataset, optimizer)
 
 # save the model
