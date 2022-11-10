@@ -72,11 +72,9 @@ class Encoder(nn.Module):
     This class will contain the basic Encoder network which encodes the most important features into the latent space.
     TODO: implement the init and the forward method.
     """
-
     def __init__(self, config: dict):
         """TODO: define your layers here, as described in the assignment."""
         super(Encoder, self).__init__()
-
         ### Convolutional block
         self.encoder_cnn = nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(3, 3), stride=(2, 2), padding=1),
@@ -91,10 +89,11 @@ class Encoder(nn.Module):
         ### Linear block
         self.encoder_lin = nn.Sequential(
             nn.Linear(3*3*32, 128),
+            nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Linear(128, config['latent_dim']),
+            nn.BatchNorm1d(config['latent_dim'])
         )
-
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """TODO: implement the forward method."""
@@ -121,8 +120,10 @@ class Decoder(nn.Module):
         # Convolutional block
         self.decoder_lin = nn.Sequential(
             nn.Linear(config["latent_dim"], 128),
+            nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Linear(128, 3 * 3 * 32),
+            nn.BatchNorm1d(3 * 3 * 32)
         )
 
         # Unflatten layer
@@ -172,6 +173,7 @@ class VariationalEncoder(nn.Module):
         ### Linear block
         self.encoder_lin = nn.Sequential(
             nn.Linear(3 * 3 * 32, 3 * 3 * 32),
+            nn.BatchNorm1d(3*3*32),
             nn.ReLU()
         )
         self.fc_mu = nn.Linear(32*3*3, config['latent_dim'])

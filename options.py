@@ -6,10 +6,10 @@ class CustomParser:
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         ### TRAINING OPTIONS ###
-        self.parser.add_argument('--num_epochs', type=int, default=20)
+        self.parser.add_argument('--num_epochs', type=int, default=10)
         self.parser.add_argument('--learning_rate', type=float, default=0.001)
-        self.parser.add_argument('--batch_size', type=int, default=64)
-        self.parser.add_argument('--latent_dim', type=int, default=10)
+        self.parser.add_argument('--batch_size', type=int, default=32)
+        self.parser.add_argument('--latent_dim', type=int, default=32)
         self.parser.add_argument('--dataset', type=str, default="MNIST",
                                  help="The dataset used. Choose between MNIST or CIFAR10.")
         self.parser.add_argument('--lambda', type=float, help="The lambda value of B-VAE.", default=1)
