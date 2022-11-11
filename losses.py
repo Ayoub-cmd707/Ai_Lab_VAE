@@ -17,10 +17,7 @@ def calc_vae_loss(distance: nn.Module, input: Tuple[torch.Tensor, torch.Tensor, 
     """
 
     decoded_image, latent_vector, mu, log_var = input
-
-
-
-
     KLDiv_loss = -0.5 * torch.sum(1 + log_var - mu **2 - log_var.exp())
     KLDiv_loss = torch.mean(KLDiv_loss)
     return distance(decoded_image, target) + options["lambda"] * KLDiv_loss
+

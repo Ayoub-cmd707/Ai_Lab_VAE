@@ -30,6 +30,11 @@ def save_config(config: dict):
     with open(path, 'w') as file:
         json.dump(to_save_config, file)
 
+############### ADDED NOISE ##################
+def add_noise(inputs, noise_factor=0.3):
+    noisy = inputs + torch.randn_like(inputs) * noise_factor
+    noisy = torch.clip(noisy, 0., 1.)
+    return noisy
 
 def train_autoencoder(model: VanillaAutoEncoder, options: dict, dataset: Dataset,
                       optimizer: torch.optim.Optimizer):
@@ -44,14 +49,16 @@ def train_autoencoder(model: VanillaAutoEncoder, options: dict, dataset: Dataset
         for data in dataset.train_loader:
             img, _ = data
             img = torch.Tensor(img).to(options["device"])
+            #### ADDED NOISE ####
+            img_noisy = add_noise(img, 0.3)
 
             optimizer.zero_grad()
 
             # TODO: forward the image through the model.
-            output = model.forward(img)
+            output = model.forward(img_noisy)
 
             # TODO: calculate the loss
-            loss = distance(output, img)
+            loss = distance(output, img_noisy)
 
             # TODO: Backpropagate the loss through the model;
             loss.backward()
@@ -121,7 +128,6 @@ def reparameterize(mu: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
     onto a certain place in the latent space.
     TODO: Implement this below.
     """
-
     return mu + torch.exp(log_var / 2) * torch.distributions.Normal(0, 1).sample(mu.shape)
 
 
